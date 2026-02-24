@@ -1,3 +1,5 @@
+from datetime import timedelta, datetime
+
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel, ConfigDict
 from sqlalchemy import select
@@ -5,14 +7,21 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
 from cors.database import get_db
+from domains.notes import NoteRepository
 from models import Note
+
+REPEATS = (
+    timedelta(minutes=30),
+    timedelta(days=1),
+    timedelta(weeks=2),
+    timedelta(weeks=4*3)
+)
 
 router = APIRouter()
 
 
 class NoteBaseSchema(BaseModel):
     title: str
-    user_id: int
 
 class NoteSchema(NoteBaseSchema):
     model_config = ConfigDict(from_attributes=True)
@@ -27,12 +36,7 @@ async def create_note(
         payload: NoteBaseSchema,
         db: AsyncSession = Depends(get_db)
 ):
-    new_note = Note(title=payload.title, user_id=payload.user_id)
-    db.add(new_note)
-    await db.commit()
-    await db.refresh(new_note)
-
-    return new_note
+    return await NoteRepository.create(payload.model_dump(), db)
 
 @router.get(
     "/notes",
@@ -42,4 +46,4 @@ async def create_note(
 async def get_notes(
         db: AsyncSession = Depends(get_db)
 ):
-    return (await db.execute(select(Note))).scalars().all()
+    return await NoteRepository.get_list(1, db)

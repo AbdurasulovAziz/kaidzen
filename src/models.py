@@ -11,7 +11,7 @@ class User(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String)
 
-    created_at = Column(DateTime, default=datetime.now())
+    created_at = Column(DateTime(timezone=False), default=datetime.now())
 
 class Note(Base):
     __tablename__ = 'notes'
@@ -19,8 +19,7 @@ class Note(Base):
     title = Column(String)
     user_id = Column(Integer, ForeignKey('users.id'))
 
-
-    created_at = Column(DateTime, default=datetime.now())
+    created_at = Column(DateTime(timezone=False), default=datetime.now())
 
 class Repetition(Base):
     __tablename__ = 'repetitions'
@@ -28,4 +27,7 @@ class Repetition(Base):
     text = Column(Text)
     note_id = Column(Integer, ForeignKey('notes.id'))
 
-    created_at = Column(DateTime, default=datetime.now())
+    iteration = Column(Integer)
+    next_review_at = Column(DateTime(timezone=False))
+
+    created_at = Column(DateTime(timezone=False), default=datetime.now())
