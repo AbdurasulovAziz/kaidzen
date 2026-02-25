@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import Column, String, Integer, ForeignKey, Text, DateTime
+from sqlalchemy import Column, String, Integer, ForeignKey, Text, DateTime, func
 
 from cors.database import Base
 
@@ -11,7 +11,7 @@ class User(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String)
 
-    created_at = Column(DateTime(timezone=False), default=datetime.now())
+    created_at = Column(DateTime(timezone=False), server_default=func.now())
 
 class Note(Base):
     __tablename__ = 'notes'
@@ -19,7 +19,7 @@ class Note(Base):
     title = Column(String)
     user_id = Column(Integer, ForeignKey('users.id'))
 
-    created_at = Column(DateTime(timezone=False), default=datetime.now())
+    created_at = Column(DateTime(timezone=False), server_default=func.now())
 
 class Repetition(Base):
     __tablename__ = 'repetitions'
@@ -30,4 +30,4 @@ class Repetition(Base):
     iteration = Column(Integer)
     next_review_at = Column(DateTime(timezone=False))
 
-    created_at = Column(DateTime(timezone=False), default=datetime.now())
+    created_at = Column(DateTime(timezone=False), server_default=func.now())

@@ -1,4 +1,4 @@
-from sqlalchemy import select
+from sqlalchemy import select, update
 
 from models import Note
 
@@ -14,5 +14,11 @@ class NoteRepository:
         return new_obj
 
     @staticmethod
-    async def get_list(user_id, session):
-        return (await session.execute(select(Note).where(Note.user_id==user_id))).scalars().all()
+    async def get_list(session):
+        return (await session.execute(select(Note))).scalars().all()
+
+    @staticmethod
+    async def update(object_id, data, session):
+        await session.execute(update(Note).where(Note.id == object_id).values(**data))
+        await session.commit()
+

@@ -1,21 +1,11 @@
-from datetime import timedelta, datetime
 
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel, ConfigDict
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
 from cors.database import get_db
 from domains.notes import NoteRepository
-from models import Note
-
-REPEATS = (
-    timedelta(minutes=30),
-    timedelta(days=1),
-    timedelta(weeks=2),
-    timedelta(weeks=4*3)
-)
 
 router = APIRouter()
 
@@ -46,4 +36,4 @@ async def create_note(
 async def get_notes(
         db: AsyncSession = Depends(get_db)
 ):
-    return await NoteRepository.get_list(1, db)
+    return await NoteRepository.get_list(db)

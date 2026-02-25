@@ -1,46 +1,31 @@
-from fastapi import APIRouter, Depends
-from pydantic import BaseModel, ConfigDict
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
-from starlette import status
+from datetime import timedelta, datetime
 
-from cors.database import get_db
-from models import Note, Repetition
+from domains.repetitions import RepetitionRepository
 
-router = APIRouter()
-
-
-class RepetitionBaseSchema(BaseModel):
-    title: str
-    user_id: int
-
-class RepetitionSchema(RepetitionBaseSchema):
-    model_config = ConfigDict(from_attributes=True)
-    id: int
-
-@router.post(
-    "/repetitions",
-    response_model=RepetitionSchema,
-    status_code=status.HTTP_201_CREATED
+REPEATS = (
+    timedelta(minutes=30),
+    timedelta(days=1),
+    timedelta(weeks=2),
+    timedelta(weeks=4*3)
 )
-async def create_repetition(
-        payload: RepetitionBaseSchema,
-        db: AsyncSession = Depends(get_db)
-):
-    ...
-    # new_note = Note(title=payload.title, user_id=payload.user_id)
-    # db.add(new_note)
-    # await db.commit()
-    # await db.refresh(new_note)
 
-    # return new_note
+class RepetitionService:
 
-@router.get(
-    "/repetitions",
-    response_model=list[RepetitionSchema],
-    status_code=status.HTTP_200_OK
-)
-async def get_notes(
-        db: AsyncSession = Depends(get_db)
-):
-    return (await db.execute(select(Repetition))).scalars().all()
+    @staticmethod
+    async def create_repetition(data, session):
+
+        last_repetition_iteration = await RepetitionRepository.get_last_repetitions_iteration_by_id(data.note_id, session) or 0
+
+        last_index = len(REPEATS) - 1
+
+        if last_repetition_iteration > last_index:
+            next_review_at = datetime.now() + REPEATS[last_index]
+        else:
+            next_review_at = datetime.now() + REPEATS[last_repetition_iteration]
+
+        new_repetition = await RepetitionRepository.create(
+            data.model_dump() | {"iteration": last_repetition_iteration + 1, "next_review_at": next_review_at},
+            session
+        )
+
+        return new_repetition

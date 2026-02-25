@@ -1,11 +1,10 @@
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel, ConfigDict
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
 from cors.database import get_db
-from models import Note, User
+from domains.users import UserRepository
 
 router = APIRouter()
 
@@ -26,12 +25,8 @@ async def create_user(
         payload: UserBaseSchema,
         db: AsyncSession = Depends(get_db)
 ):
-    new_note = Note(title=payload.title, user_id=payload.user_id)
-    db.add(new_note)
-    await db.commit()
-    await db.refresh(new_note)
 
-    return new_note
+    return await UserRepository.create(payload.model_dump(), db)
 
 @router.get(
     "/users",
@@ -41,4 +36,4 @@ async def create_user(
 async def get_users(
         db: AsyncSession = Depends(get_db)
 ):
-    return (await db.execute(select(User))).scalars().all()
+    return await UserRepository.get_list(db)
